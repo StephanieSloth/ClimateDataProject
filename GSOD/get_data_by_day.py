@@ -75,12 +75,12 @@ if __name__ == '__main__':
     # 一天一天获取数据，直接取的是全中国的站点
     # df = pd.DataFrame()
     date_list = []
-    lastdate = datetime.date(2021, 1, 1)  # 结束日期（不包含）
+    lastdate = datetime.date(2020, 1, 1)  # 结束日期（不包含）
     offset = 1000   # 最多为1000
     params = {"datasetid": "GHCND",
               "locationid": "FIPS:CH",
-              "startdate": datetime.date(2020, 10, 26),
-              "enddate": datetime.date(2020, 10, 26),
+              "startdate": datetime.date(2019, 1, 1),
+              "enddate": datetime.date(2019, 1, 1),
               "units": "metric",
               "limit": offset
               }

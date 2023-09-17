@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 # 统一插值，再划分
 def calculate_unify(x_mesh, y_mesh, provinces,rbf):
     z_mesh = rbf(x_mesh, y_mesh)
+    visiual(z_mesh)
     # 提取省名属性列
     province_names = provinces["省"]
 
@@ -51,7 +52,7 @@ if __name__ == '__main__':
     provinces = gpd.read_file('boundary/2020年省级/省级.shp')
 
     # 读取表格数据
-    data = pd.read_csv('data/2020/climatedata_china_2020-01-01.csv', sep=',')
+    data = pd.read_csv('data/2020/climatedata_china_2020-08-31.csv', sep=',')
     precipitation = data[data['datatype'] == 'PRCP']
     maxtemp = data[data['datatype'] == 'TMAX']
     mintemp = data[data['datatype'] == 'TMIN']
@@ -72,19 +73,26 @@ if __name__ == '__main__':
 
     # RBF法插值
     # function = 'multiquadric'默认,'inverse','gaussian' ,'linear' ,'cubic' ,'quintic' , 'thin_plate'
-    rbf = Rbf(site_x, site_y, data_values)
+    rbf = Rbf(site_x, site_y, data_values, function='multiquadric')
     TAVG_province_unify = calculate_unify(x_mesh, y_mesh, provinces,rbf)
 
     # 设定省名
-    check_data = pd.read_excel('data\TAVG_20200101.xlsx')
-    rmse_table = pd.DataFrame(columns=['省', '分省插值','统一插值'])
+    check_data = pd.read_excel('data\TAVG_20200831.xlsx')
+    rmse_table = pd.DataFrame(columns=['省', '参考数据', '插值数据', 'RMSE'])
     r = 0
     for prov in check_data['省']:
         # 提取对应省份的数据
-        predicted = TAVG_province_unify[prov]
-        actual = check_data[check_data['省'] == prov]['平均气温']
-        rmse = np.sqrt(np.mean((predicted- actual) ** 2))
-        rmse_table.loc[r] = [prov, rmse]
+        if prov == '澳门特别行政区':
+            predicted = 0
+        else:
+            predicted = TAVG_province_unify[prov]
+        actualdata = check_data[check_data['省'] == prov]['平均气温'].values
+        actual, = actualdata # 提取数据
+        print(actual)
+        rmse = np.sqrt(np.mean((predicted - actual) ** 2))
+        rmse_table.loc[r] = [prov, actual, predicted, rmse]
         r += 1
-    print(rmse_table)
+    # 构造文件路径
+    dir = "data" + '\\' + "rmse_table_RBF_thin_plate" + ".csv"
+    rmse_table.to_csv(dir, index=False, encoding='GBK')
 
