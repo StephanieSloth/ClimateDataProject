@@ -4,12 +4,15 @@ import numpy as np
 from scipy.interpolate import Rbf
 from shapely.geometry import Point
 import matplotlib.pyplot as plt
-
+"""
+为了确认插值RBF方法中的基函数效果
+可视化函数能够输出省级边界
+"""
 
 # 统一插值，再划分
 def calculate_unify(x_mesh, y_mesh, provinces,rbf):
     z_mesh = rbf(x_mesh, y_mesh)
-    visiual(z_mesh)
+    visiual(z_mesh,provinces)
     # 提取省名属性列
     province_names = provinces["省"]
 
@@ -22,25 +25,35 @@ def calculate_unify(x_mesh, y_mesh, provinces,rbf):
     data = {'value': [z_mesh[i][j] for i in range(len(z_mesh)) for j in range(len(z_mesh[0]))]}
     gdf = gpd.GeoDataFrame(data, geometry=geometry)
 
+    # 转换坐标参考系统 (CRS)
+    # Left CRS: None
+    # Right CRS: EPSG:4326 （WGS84）
+    gdf = gdf.to_crs(provinces.crs)
+
     # 切分省份
     # 匹配右侧 GeoDataFrame 中所有包含左侧 GeoDataFrame 中的点（left）的省份
     # 我们希望找到在省份边界内的每个点，因此使用 "within"。
-    gdf = gpd.sjoin(gdf, provinces, how="left", op="within")
+    gdf = gpd.sjoin(gdf, provinces, how="left", predicate="within")
     # 计算每个省份的平均值
     avg_values = gdf.groupby("省")["value"].mean()
     return avg_values
 
 
 # 可视化插值结果
-def visiual(z_mesh):
+def visiual(z_mesh,provinces):
     plt.imshow(z_mesh, extent=[x_min, x_max, y_min, y_max], origin='lower',
                cmap='jet', alpha=0.7)
     plt.scatter(site_x, site_y, c=data_values,
                 cmap='jet', edgecolor='k')
-    plt.colorbar(label='Value')
-    plt.xlabel('X Coordinate')
-    plt.ylabel('Y Coordinate')
-    plt.title('Interpolated Data')
+    plt.colorbar(label='average temperature（°C）')
+    # 创建一个坐标轴对象
+    ax = plt.gca()
+    # 绘制 Shapefile 边界
+    provinces.plot(ax=ax, edgecolor='black', facecolor='none')
+
+    plt.xlabel('longitude')
+    plt.ylabel('latitude')
+    plt.title('2020/08/31 interpolated results')
     plt.show()
 
 
@@ -73,7 +86,7 @@ if __name__ == '__main__':
 
     # RBF法插值
     # function = 'multiquadric'默认,'inverse','gaussian' ,'linear' ,'cubic' ,'quintic' , 'thin_plate'
-    rbf = Rbf(site_x, site_y, data_values, function='multiquadric')
+    rbf = Rbf(site_x, site_y, data_values, function='linear')
     TAVG_province_unify = calculate_unify(x_mesh, y_mesh, provinces,rbf)
 
     # 设定省名
@@ -88,11 +101,11 @@ if __name__ == '__main__':
             predicted = TAVG_province_unify[prov]
         actualdata = check_data[check_data['省'] == prov]['平均气温'].values
         actual, = actualdata # 提取数据
-        print(actual)
+        # print(actual)
         rmse = np.sqrt(np.mean((predicted - actual) ** 2))
         rmse_table.loc[r] = [prov, actual, predicted, rmse]
         r += 1
-    # 构造文件路径
-    dir = "data" + '\\' + "rmse_table_RBF_thin_plate" + ".csv"
-    rmse_table.to_csv(dir, index=False, encoding='GBK')
+    # # 构造文件路径
+    # dir = "data" + '\\' + "rmse_table_RBF_thin_plate" + ".csv"
+    # rmse_table.to_csv(dir, index=False, encoding='GBK')
 
