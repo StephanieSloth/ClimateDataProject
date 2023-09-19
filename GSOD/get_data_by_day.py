@@ -75,18 +75,18 @@ if __name__ == '__main__':
     # 一天一天获取数据，直接取的是全中国的站点
     # df = pd.DataFrame()
     date_list = []
-    lastdate = datetime.date(2020, 1, 1)  # 结束日期（不包含）
+    lastdate = datetime.date(1982, 1, 1)  # 结束日期（不包含）
     offset = 1000   # 最多为1000
     params = {"datasetid": "GHCND",
               "locationid": "FIPS:CH",
-              "startdate": datetime.date(2019, 1, 1),
-              "enddate": datetime.date(2019, 1, 1),
+              "startdate": datetime.date(1981, 1, 1),
+              "enddate": datetime.date(1981, 1, 1),
               "units": "metric",
               "limit": offset
               }
     while (params["enddate"] < lastdate):
         # 当前日期
-        print(params["enddate"])
+        # print(params["enddate"])
         date_list.append(params["enddate"])
         # 获取数据
         data = get_data_from_api("https://www.ncei.noaa.gov/cdo-web/api/v2/data?", params, api_token,offset)
@@ -104,6 +104,8 @@ if __name__ == '__main__':
         # 构造文件路径
         dir = "data"+'\\'+year_str+"\climatedata_china_" + writedate_str + ".csv"
         df_with_station_info.to_csv(dir, index=False)
+        # 显示处理完的日期
+        print(params["enddate"])
         # 更新参数
         params = update_params(params)
 

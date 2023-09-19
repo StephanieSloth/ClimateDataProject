@@ -1,4 +1,6 @@
 import datetime
+import os
+
 import geopandas as gpd
 import pandas as pd
 import numpy as np
@@ -64,8 +66,8 @@ if __name__ == '__main__':
     # 读取省份边界shp文件
     provinces = gpd.read_file('boundary/2020年县级/县级.shp')
 
-    curdata = datetime.date(2020, 1, 1)  # 当前日期
-    lastdate = datetime.date(2021, 1, 1)  # 结束日期（不包含）
+    curdata = datetime.date(1980, 1, 31)  # 当前日期
+    lastdate = datetime.date(1981, 1, 1)  # 结束日期（不包含）
     while (curdata < lastdate):
         # 读取表格数据
         year_str = curdata.strftime("%Y")  # 文件夹
@@ -96,7 +98,11 @@ if __name__ == '__main__':
         merged_df = merged_df.replace('', np.nan)
 
         # 构造文件路径
-        dir = "results/" +  "县级数据_" + date_str +".csv"
+        # 检查年份对应的文件夹是否存在，如果不存在则创建
+        year_folder = os.path.join('results', year_str)
+        if not os.path.exists(year_folder):
+            os.mkdir(year_folder)
+        dir = "results/" + year_str + "/县级数据_" + date_str +".csv"
         merged_df.to_csv(dir, index=False, encoding='GBK')
 
         # 这一天完成
