@@ -19,6 +19,9 @@
 
 ## 文件说明
 /GSOD/data: 存放NOAA每日站点数据
+
 /GSOD/boundary: 中国的行政区划文件
+
 /GSOD/data_allprovince: 提供的部分省份每日数据
+
 /previous: 之前版本的代码，已弃用
