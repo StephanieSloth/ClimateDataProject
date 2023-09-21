@@ -1,7 +1,7 @@
 # ClimateDataProject
 从NOAA上获取站点气候数据，对中国境内226个站点数据进行插值，依据2020年行政区划统计各区县的气候数据
 
-## 文件说明
+## 代码说明
 **实际操作中先运行get_data_by_day，再运行cut_boundart_county**
 
 1. get_all_stations.py
@@ -16,3 +16,9 @@
   
 4. cut_boundary_county.py
    用于对已获取的每日数据进行插值，并按区县统计 
+
+## 文件说明
+/GSOD/data: 存放NOAA每日站点数据
+/GSOD/boundary: 中国的行政区划文件
+/GSOD/data_allprovince: 提供的部分省份每日数据
+/previous: 之前版本的代码，已弃用
