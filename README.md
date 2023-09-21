@@ -11,8 +11,8 @@
   用于获取每日数据，以年为循环。
   设置初始日期为2020-01-01，结束日期为2021-01-01，表示获取2020年的所有数据
 
-3.cut_boundary_rbf.py
+3. cut_boundary_rbf.py
   用于测试插值方法
   
-4.cut_boundary_county.py
+4. cut_boundary_county.py
    用于对已获取的每日数据进行插值，并按区县统计 
