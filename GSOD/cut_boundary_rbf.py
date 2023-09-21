@@ -4,7 +4,10 @@ import numpy as np
 from scipy.interpolate import Rbf
 from shapely.geometry import Point
 import matplotlib.pyplot as plt
-
+"""
+为了确认插值RBF方法中的基函数效果
+可视化函数能够输出省级边界
+"""
 
 # 统一插值，再划分
 def calculate_unify(x_mesh, y_mesh, provinces,rbf):
@@ -22,10 +25,15 @@ def calculate_unify(x_mesh, y_mesh, provinces,rbf):
     data = {'value': [z_mesh[i][j] for i in range(len(z_mesh)) for j in range(len(z_mesh[0]))]}
     gdf = gpd.GeoDataFrame(data, geometry=geometry)
 
+    # 转换坐标参考系统 (CRS)
+    # Left CRS: None
+    # Right CRS: EPSG:4326 （WGS84）
+    gdf = gdf.to_crs(provinces.crs)
+
     # 切分省份
     # 匹配右侧 GeoDataFrame 中所有包含左侧 GeoDataFrame 中的点（left）的省份
     # 我们希望找到在省份边界内的每个点，因此使用 "within"。
-    gdf = gpd.sjoin(gdf, provinces, how="left", op="within")
+    gdf = gpd.sjoin(gdf, provinces, how="left", predicate="within")
     # 计算每个省份的平均值
     avg_values = gdf.groupby("省")["value"].mean()
     return avg_values
@@ -93,7 +101,7 @@ if __name__ == '__main__':
             predicted = TAVG_province_unify[prov]
         actualdata = check_data[check_data['省'] == prov]['平均气温'].values
         actual, = actualdata # 提取数据
-        print(actual)
+        # print(actual)
         rmse = np.sqrt(np.mean((predicted - actual) ** 2))
         rmse_table.loc[r] = [prov, actual, predicted, rmse]
         r += 1

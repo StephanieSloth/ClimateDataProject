@@ -50,11 +50,11 @@ if __name__ == '__main__':
     date_list = []
     lastdate = datetime.date(2020, 1, 2)
     params = {"datasetid": "GHCND",
-              "locationid": "FIPS:CH",
-              # "stationid": "GHCND:CHM00053898",
+              # "locationid": "FIPS:CH",
+              "stationid": "GHCND:CHM00058314",
               "startdate": datetime.date(2020, 1, 1),
               "enddate": datetime.date(2020, 1, 1),
-              "units": "metric",
+              "units": "standard",
               "limit": 1000
               }
 
