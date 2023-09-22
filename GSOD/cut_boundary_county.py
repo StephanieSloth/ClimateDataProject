@@ -28,11 +28,11 @@ def calculate_unify(x_mesh, y_mesh, provinces, rbf):
     # 匹配右侧 GeoDataFrame 中所有包含左侧 GeoDataFrame 中的点（left）的省份
     # 我们希望找到在省份边界内的每个点，因此使用 "within"。
     gdf.crs = "EPSG:4326"
-    gdf = gpd.sjoin(gdf, provinces, how="left", predicate="within")
+    gdf = gpd.sjoin(gdf, provinces, how="right", predicate="within")
 
     # 计算每个省份的平均值
     avg_values = gdf.groupby("县级")["value"].mean()  # series
-    grouped_data = gdf.groupby(["县级", "省级"])["value"].mean().reset_index()  # 三列dataframe
+    grouped_data = gdf.groupby(["省级","省级码","地级", "地级码","县级", "县级码"])["value"].mean().reset_index()
     sorted_data = grouped_data.sort_values(by='省级')  # 按省级排序
     return sorted_data
 
@@ -47,7 +47,7 @@ def interpolate_data(station_data):
 
     # 设置插值网格的范围和分辨率
     x_min, y_min, x_max, y_max = china_boundary.total_bounds  # 获取经纬度的最大值和最小值
-    resolution = 0.1  # 替换为所需的实际分辨率
+    resolution = 0.03  # 替换为所需的实际分辨率
     # 创建插值网格的坐标点
     x_mesh, y_mesh = np.meshgrid(np.arange(x_min, x_max, resolution),
                                  np.arange(y_min, y_max, resolution))
@@ -62,12 +62,13 @@ def interpolate_data(station_data):
 if __name__ == '__main__':
     # 读取中国边界的矢量数据
     china_boundary = gpd.read_file('boundary/国界/国家矢量.shp')
-
+    x_min, y_min, x_max, y_max = china_boundary.total_bounds
     # 读取省份边界shp文件
     provinces = gpd.read_file('boundary/2020年县级/县级.shp')
-
-    curdata = datetime.date(1980, 1, 31)  # 当前日期
-    lastdate = datetime.date(1981, 1, 1)  # 结束日期（不包含）
+    provinces = provinces.sort_values(by='省级码')  # 按省级排序
+    x_min1, y_min1, x_max1, y_max1 = provinces.total_bounds
+    curdata = datetime.date(1980, 1, 1)  # 当前日期
+    lastdate = datetime.date(1980, 1, 2)  # 结束日期（不包含）
     while (curdata < lastdate):
         # 读取表格数据
         year_str = curdata.strftime("%Y")  # 文件夹
@@ -88,12 +89,12 @@ if __name__ == '__main__':
         county_TAVG = interpolate_data(avgtemp)
 
         # 合并数据
-        merged_df = pd.merge(county_PRCP, county_TMAX,on=['县级', '省级'], how='outer',suffixes=('_A', '_B'))
-        merged_df.columns = ['县级', '省级','降水量（mm）','最高温度（C）']
-        merged_df = pd.merge(merged_df, county_TMIN, on=['县级', '省级'], how='outer')
-        merged_df.columns = ['县级', '省级', '降水量（mm）', '最高气温（C）', '最低气温（C）']
-        merged_df = pd.merge(merged_df, county_TAVG, on=['县级', '省级'], how='outer')
-        merged_df.columns = ['县级', '省级', '降水量（mm）', '最高气温（C）', '最低气温（C）', '平均气温（C）']
+        merged_df = pd.merge(county_PRCP, county_TMAX,on=["省级","省级码","地级", "地级码","县级", "县级码"], how='outer',suffixes=('_A', '_B'))
+        merged_df.columns = ["省级","省级码","地级", "地级码","县级", "县级码",'降水量（mm）','最高温度（C）']
+        merged_df = pd.merge(merged_df, county_TMIN, on=["省级","省级码","地级", "地级码","县级", "县级码"], how='outer')
+        merged_df.columns = ["省级","省级码","地级", "地级码","县级", "县级码", '降水量（mm）', '最高气温（C）', '最低气温（C）']
+        merged_df = pd.merge(merged_df, county_TAVG, on=["省级","省级码","地级", "地级码","县级", "县级码"], how='outer')
+        merged_df.columns = ["省级","省级码","地级", "地级码","县级", "县级码", '降水量（mm）', '最高气温（C）', '最低气温（C）', '平均气温（C）']
          # 将没有数据的地方填充为 NaN
         merged_df = merged_df.replace('', np.nan)
 
